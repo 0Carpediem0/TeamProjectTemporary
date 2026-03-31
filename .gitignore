@@ -28,9 +28,11 @@ alembic.ini
 *.sqlite3
 
 # Переменные окружения (секреты, ключи, доступы к БД)
+data/
 .env
 .env.local
 .env.*.local
+backend/migrations/env.py
 
 # Логирование
 *.log
