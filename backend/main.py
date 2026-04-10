@@ -1,8 +1,11 @@
 from fastapi import FastAPI, Depends
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import PlainTextResponse
 
 from backend.db_depends import get_db
+from backend.database import engine, Base
+from backend.models import passwords  # noqa: F401
 from backend.schemas.response import ResponseSchema, RequestSchema
 from backend.utils.check_strength import check_strength
 
@@ -10,7 +13,26 @@ app = FastAPI(
     title='Сервис проверки стойкости паролей и их присутствия в базах утечек'
 )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://127.0.0.1:5500",
+        "http://localhost:5500",
+        "http://127.0.0.1:5501",
+        "http://localhost:5501",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 tags = ['check_password']
+
+
+@app.on_event("startup")
+async def on_startup() -> None:
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
 
 
 @app.get('/', tags=['root'])

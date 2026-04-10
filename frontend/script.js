@@ -1,13 +1,20 @@
 const passwordInput = document.getElementById("password");
 const togglePasswordBtn = document.getElementById("togglePassword");
 const checkBtn = document.getElementById("checkBtn");
+const themeToggleBtn = document.getElementById("themeToggle");
 
 const resultPlaceholder = document.getElementById("resultPlaceholder");
 const resultContent = document.getElementById("resultContent");
+const resultCard = document.getElementById("resultCard");
+const closeResultPopup = document.getElementById("closeResultPopup");
 const scoreBadge = document.getElementById("scoreBadge");
 const leakStatus = document.getElementById("leakStatus");
 const detailsList = document.getElementById("detailsList");
 const tipsList = document.getElementById("tipsList");
+const API_URL = "http://localhost:8000/api/check";
+const THEME_STORAGE_KEY = "password-checker-theme";
+
+initTheme();
 
 if (passwordInput) {
   passwordInput.addEventListener("input", () => {
@@ -24,139 +31,142 @@ if (togglePasswordBtn && passwordInput) {
 }
 
 if (checkBtn && passwordInput) {
-  checkBtn.addEventListener("click", () => {
+  checkBtn.addEventListener("click", async () => {
     const value = passwordInput.value || "";
     if (!value) return;
 
-    const analysis = analyzePassword(value);
+    checkBtn.disabled = true;
+    checkBtn.textContent = "Проверяем...";
 
-    resultPlaceholder.hidden = true;
-    resultContent.hidden = false;
+    try {
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ password: value }),
+      });
 
-    scoreBadge.textContent = analysis.scoreLabel;
-    scoreBadge.classList.remove("score-medium", "score-strong");
-    if (analysis.level === "medium") {
-      scoreBadge.classList.add("score-medium");
-    } else if (analysis.level === "strong") {
-      scoreBadge.classList.add("score-strong");
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const payload = await response.json();
+      const analysis = mapBackendResponse(payload);
+      renderResult(analysis);
+    } catch (error) {
+      resultPlaceholder.hidden = true;
+      resultContent.hidden = false;
+      scoreBadge.textContent = "Ошибка проверки";
+      scoreBadge.classList.remove("score-medium", "score-strong");
+      leakStatus.textContent =
+        "Не удалось получить ответ от бэкенда. Проверьте, что сервер запущен и CORS разрешен.";
+      leakStatus.classList.remove("ok");
+      leakStatus.classList.add("bad");
+      detailsList.innerHTML = "<li>Повторите попытку позже.</li>";
+      tipsList.innerHTML = "<li>Проверьте, что бэкенд запущен и принимает POST-запросы.</li>";
+      console.error("Password check failed:", error);
+    } finally {
+      checkBtn.textContent = "Проверить пароль";
+      checkBtn.disabled = !passwordInput.value;
     }
-
-    leakStatus.textContent = analysis.leakText;
-    leakStatus.classList.remove("bad", "ok");
-    leakStatus.classList.add(analysis.leakStatusClass);
-
-    detailsList.innerHTML = "";
-    analysis.details.forEach((item) => {
-      const li = document.createElement("li");
-      li.innerHTML = `<span class="key">${item.label}:</span> <span class="${item.state}">${item.value}</span>`;
-      detailsList.appendChild(li);
-    });
-
-    tipsList.innerHTML = "";
-    analysis.tips.forEach((tip) => {
-      const li = document.createElement("li");
-      li.textContent = tip;
-      tipsList.appendChild(li);
-    });
   });
 }
 
-function analyzePassword(password) {
-  const length = password.length;
-  const hasLower = /[a-zа-яё]/.test(password);
-  const hasUpper = /[A-ZА-ЯЁ]/.test(password);
-  const hasDigit = /\d/.test(password);
-  const hasSymbol = /[^0-9a-zA-Zа-яА-ЯёЁ]/.test(password);
+if (closeResultPopup) {
+  closeResultPopup.addEventListener("click", closePopup);
+}
 
-  let score = 0;
-  if (length >= 8) score += 1;
-  if (length >= 12) score += 1;
-  if (hasLower && hasUpper) score += 1;
-  if (hasDigit) score += 1;
-  if (hasSymbol) score += 1;
+if (themeToggleBtn) {
+  themeToggleBtn.addEventListener("click", toggleTheme);
+}
 
-  const lowerPassword = password.toLowerCase();
-  const badPatterns = ["password", "qwerty", "1234", "admin", "letmein"];
-  const hasBadPattern = badPatterns.some((p) => lowerPassword.includes(p));
+function renderResult(analysis) {
+  openPopup();
+  resultPlaceholder.hidden = true;
+  resultContent.hidden = false;
 
-  if (hasBadPattern) {
-    score = Math.max(0, score - 2);
+  scoreBadge.textContent = analysis.scoreLabel;
+  scoreBadge.classList.remove("score-medium", "score-strong");
+  if (analysis.level === "medium") {
+    scoreBadge.classList.add("score-medium");
+  } else if (analysis.level === "strong") {
+    scoreBadge.classList.add("score-strong");
   }
 
-  let level = "weak";
-  let scoreLabel = "Слабый пароль";
-  if (score >= 4) {
-    level = "strong";
-    scoreLabel = "Сильный пароль";
-  } else if (score === 3) {
-    level = "medium";
-    scoreLabel = "Средний пароль";
-  }
+  leakStatus.textContent = analysis.leakText;
+  leakStatus.classList.remove("bad", "ok");
+  leakStatus.classList.add(analysis.leakStatusClass);
 
-  const mockLeakCount = hasBadPattern ? 5321 : 0;
+  detailsList.innerHTML = "";
+  analysis.details.forEach((item) => {
+    const li = document.createElement("li");
+    li.innerHTML = `<span class="key">${item.label}:</span> <span class="${item.state}">${item.value}</span>`;
+    detailsList.appendChild(li);
+  });
+
+  tipsList.innerHTML = "";
+  analysis.tips.forEach((tip) => {
+    const li = document.createElement("li");
+    li.textContent = tip;
+    tipsList.appendChild(li);
+  });
+}
+
+function openPopup() {
+  if (!resultCard) return;
+  resultCard.classList.add("is-open");
+  resultCard.setAttribute("aria-hidden", "false");
+  document.body.classList.add("popup-open");
+}
+
+function closePopup() {
+  if (!resultCard) return;
+  resultCard.classList.remove("is-open");
+  resultCard.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("popup-open");
+}
+
+function mapBackendResponse(payload) {
+  const levelRaw = String(payload?.strength || "weak").toLowerCase();
+  const level =
+    levelRaw === "strong"
+      ? "strong"
+      : levelRaw === "medium"
+        ? "medium"
+        : "weak";
+
+  const scoreLabel =
+    level === "strong"
+      ? "Сильный пароль"
+      : level === "medium"
+        ? "Средний пароль"
+        : "Слабый пароль";
+
+  const reasons = Array.isArray(payload?.reasons) ? payload.reasons : [];
+  const scoreValue = Number(payload?.scores ?? 0);
+  const breachReason = reasons.find((r) => r.toLowerCase().includes("утеч"));
+  const hasBreach = Boolean(breachReason);
   const leakText =
-    mockLeakCount > 0
-      ? `Пароль найден в утечках (${mockLeakCount.toLocaleString("ru-RU")} раз). Не используйте его.`
-      : "Пароль не найден в известных базах утечек (демо‑режим).";
-  const leakStatusClass = mockLeakCount > 0 ? "bad" : "ok";
+    hasBreach
+      ? "Пароль обнаружен в базе утечек. Не используйте его."
+      : "Признаки утечки по результату проверки не обнаружены.";
+  const leakStatusClass = hasBreach ? "bad" : "ok";
 
   const details = [
     {
-      label: "Длина",
-      value:
-        length >= 12
-          ? `${length} символов (отлично)`
-          : `${length} символов (рекомендуется ≥ 12)`,
-      state: length >= 12 ? "ok" : length >= 8 ? "warn" : "bad",
+      label: "Уровень стойкости",
+      value: level,
+      state: level === "strong" ? "ok" : level === "medium" ? "warn" : "bad",
     },
     {
-      label: "Строчные буквы",
-      value: hasLower ? "есть" : "нет",
-      state: hasLower ? "ok" : "bad",
-    },
-    {
-      label: "Заглавные буквы",
-      value: hasUpper ? "есть" : "нет",
-      state: hasUpper ? "ok" : "warn",
-    },
-    {
-      label: "Цифры",
-      value: hasDigit ? "есть" : "нет",
-      state: hasDigit ? "ok" : "warn",
-    },
-    {
-      label: "Специальные символы",
-      value: hasSymbol ? "есть" : "нет",
-      state: hasSymbol ? "ok" : "warn",
-    },
-    {
-      label: "Шаблоны / популярные пароли",
-      value: hasBadPattern ? "обнаружены" : "не обнаружены",
-      state: hasBadPattern ? "bad" : "ok",
+      label: "Итоговый балл",
+      value: String(scoreValue),
+      state: scoreValue >= 4 ? "ok" : scoreValue >= 2 ? "warn" : "bad",
     },
   ];
 
-  const tips = [];
-  if (length < 12) {
-    tips.push("Увеличьте длину пароля до 12+ символов.");
-  }
-  if (!(hasLower && hasUpper)) {
-    tips.push("Используйте смесь строчных и заглавных букв.");
-  }
-  if (!hasDigit) {
-    tips.push("Добавьте в пароль цифры.");
-  }
-  if (!hasSymbol) {
-    tips.push("Добавьте спецсимволы, например !@#?$%^&*.");
-  }
-  if (hasBadPattern) {
-    tips.push(
-      "Избегайте очевидных слов и последовательностей (password, qwerty, 1234 и т.п.).",
-    );
-  }
-  if (tips.length === 0) {
-    tips.push("Пароль выглядит хорошо. Важно не использовать его на разных сервисах.");
-  }
+  const tips = reasons.length > 0 ? reasons : ["Явных замечаний нет."];
 
   return {
     level,
@@ -166,5 +176,26 @@ function analyzePassword(password) {
     details,
     tips,
   };
+}
+
+function initTheme() {
+  const savedTheme = localStorage.getItem(THEME_STORAGE_KEY) || "light";
+  setTheme(savedTheme);
+}
+
+function toggleTheme() {
+  const current = document.documentElement.getAttribute("data-theme") || "light";
+  const next = current === "dark" ? "light" : "dark";
+  setTheme(next);
+}
+
+function setTheme(theme) {
+  const normalized = theme === "dark" ? "dark" : "light";
+  document.documentElement.setAttribute("data-theme", normalized);
+  localStorage.setItem(THEME_STORAGE_KEY, normalized);
+  if (themeToggleBtn) {
+    themeToggleBtn.textContent =
+      normalized === "dark" ? "Светлая тема" : "Тёмная тема";
+  }
 }
 

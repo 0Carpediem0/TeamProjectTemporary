@@ -9,7 +9,12 @@
   <body>
     <div class="page">
       <header class="header">
-        <h1>Проверка стойкости пароля</h1>
+        <div class="header-top">
+          <h1>Проверка стойкости пароля</h1>
+          <button type="button" class="theme-toggle" id="themeToggle">
+            Тёмная тема
+          </button>
+        </div>
         <p>
           Узнайте, насколько ваш пароль надёжен и встречался ли он в базах
           утечек.
@@ -18,7 +23,6 @@
 
       <main class="layout">
         <section class="card form-card">
-          <h2 class="card-title">Проверка пароля</h2>
 
           <label for="password" class="field-label">Введите пароль</label>
           <div class="password-row">
@@ -42,7 +46,10 @@
           </button>
         </section>
 
-        <section class="card result-card">
+        <section class="card result-card" id="resultCard" aria-hidden="true">
+          <button type="button" class="popup-close" id="closeResultPopup" aria-label="Закрыть">
+            ×
+          </button>
           <h2 class="card-title">Результат проверки</h2>
 
           <div id="resultPlaceholder" class="placeholder">

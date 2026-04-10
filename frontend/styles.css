@@ -4,49 +4,145 @@
   box-sizing: border-box;
 }
 
+:root {
+  --bg: #eef6ff;
+  --surface: #ffffff;
+  --surface-soft: #f7fbff;
+  --text: #12314f;
+  --title: #0f3a66;
+  --text-muted: #5d7690;
+  --border: #d9e7f5;
+  --accent: #2d8cff;
+  --accent-strong: #1677f2;
+  --shadow: 0 10px 30px rgba(19, 73, 129, 0.12);
+}
+
+[data-theme="dark"] {
+  --bg: #0f1d2e;
+  --surface: #16263a;
+  --surface-soft: #1a2d44;
+  --text: #e9f2ff;
+  --title: #173e63;
+  --text-muted: #325070;
+  --border: #2b4563;
+  --accent: #4da2ff;
+  --accent-strong: #2d8cff;
+  --shadow: 0 12px 28px rgba(2, 8, 20, 0.55);
+}
+
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    sans-serif;
-  background: radial-gradient(circle at top, #1e293b 0, #020617 55%, #000 100%);
-  color: #e5e7eb;
+  min-height: 100vh;
+  font-family: "Segoe UI", Tahoma, sans-serif;
+  background: linear-gradient(180deg, #f5faff 0%, var(--bg) 100%);
+  color: var(--text);
 }
 
 .page {
-  max-width: 1000px;
-  margin: 40px auto;
-  padding: 0 16px 48px;
+  max-width: 960px;
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 32px 16px 40px;
+  display: flex;
+  flex-direction: column;
 }
 
 .header h1 {
   margin: 0 0 8px;
   font-size: 28px;
+  color: var(--title);
+}
+
+.header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .header p {
   margin: 0;
-  color: #9ca3af;
+  color: var(--text-muted);
 }
 
 .layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.25fr);
-  gap: 24px;
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
   margin-top: 24px;
 }
 
 @media (max-width: 800px) {
   .layout {
-    grid-template-columns: minmax(0, 1fr);
+    flex-direction: column;
   }
 }
 
 .card {
-  background: rgba(15, 23, 42, 0.96);
+  background: var(--surface);
   border-radius: 16px;
   padding: 20px 24px;
-  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.8);
-  border: 1px solid rgba(55, 65, 81, 0.8);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+}
+
+.result-card {
+  display: none;
+  position: fixed;
+  z-index: 30;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(92vw, 680px);
+  max-height: 85vh;
+  overflow: auto;
+  padding-top: 40px;
+}
+
+.result-card.is-open {
+  display: block;
+}
+
+body.popup-open::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: rgba(29, 78, 138, 0.18);
+  backdrop-filter: blur(2px);
+  z-index: 20;
+}
+
+.popup-close {
+  position: absolute;
+  right: 12px;
+  top: 10px;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-soft);
+  color: #375f84;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.popup-close:hover {
+  border-color: #b9d3ec;
+}
+
+@media (max-width: 800px) {
+  .result-card {
+    width: min(96vw, 680px);
+    max-height: 90vh;
+  }
+}
+
+.form-card {
+  position: relative;
+  width: min(560px, 92vw);
 }
 
 .card-title {
@@ -70,16 +166,16 @@ body {
   flex: 1;
   padding: 11px 12px;
   border-radius: 10px;
-  border: 1px solid #1f2937;
-  background: #020617;
-  color: #e5e7eb;
+  border: 1px solid var(--border);
+  background: var(--surface-soft);
+  color: var(--text);
   font-size: 14px;
 }
 
 .password-input:focus {
   outline: none;
-  border-color: #38bdf8;
-  box-shadow: 0 0 0 1px #38bdf8;
+  border-color: #9ec9f5;
+  box-shadow: 0 0 0 3px rgba(45, 140, 255, 0.14);
 }
 
 .btn {
@@ -96,24 +192,37 @@ body {
 .btn-ghost {
   padding: 0 12px;
   min-width: 90px;
-  background: #020617;
-  color: #9ca3af;
-  border: 1px solid #1f2937;
+  background: var(--surface-soft);
+  color: var(--text);
+  border: 1px solid var(--border);
 }
 
 .btn-ghost:hover {
-  background: #020617;
-  border-color: #4b5563;
+  border-color: #b9d3ec;
+}
+
+.theme-toggle {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  border-radius: 12px;
+  padding: 8px 12px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.theme-toggle:hover {
+  border-color: #9ec9f5;
 }
 
 .btn-primary {
   margin-top: 16px;
   width: 100%;
   padding: 11px 14px;
-  background: linear-gradient(135deg, #22c55e, #0ea5e9);
-  color: #020617;
+  background: var(--accent);
+  color: #ffffff;
   font-weight: 600;
-  box-shadow: 0 10px 30px rgba(34, 197, 94, 0.35);
+  box-shadow: 0 8px 22px rgba(45, 140, 255, 0.28);
   transition: transform 0.08s ease, box-shadow 0.08s ease, filter 0.08s ease;
 }
 
@@ -124,20 +233,20 @@ body {
 }
 
 .btn-primary:not(:disabled):hover {
-  filter: brightness(1.05);
+  background: var(--accent-strong);
   transform: translateY(-1px);
-  box-shadow: 0 14px 38px rgba(34, 197, 94, 0.45);
+  box-shadow: 0 10px 26px rgba(45, 140, 255, 0.35);
 }
 
 .hint {
   margin: 8px 0 0;
   font-size: 12px;
-  color: #6b7280;
+  color: var(--text);
 }
 
 .placeholder {
   font-size: 14px;
-  color: #6b7280;
+  color: var(--text-muted);
 }
 
 .result {
@@ -159,31 +268,31 @@ body {
   border-radius: 999px;
   font-size: 13px;
   font-weight: 600;
-  background: rgba(248, 113, 113, 0.12);
-  color: #f97373;
+  background: #ffe7e8;
+  color: #c44557;
 }
 
 .score-badge.score-medium {
-  background: rgba(234, 179, 8, 0.16);
-  color: #facc15;
+  background: #fff5d6;
+  color: #a67712;
 }
 
 .score-badge.score-strong {
-  background: rgba(34, 197, 94, 0.18);
-  color: #4ade80;
+  background: #e3f7ea;
+  color: #2f8d4b;
 }
 
 .leak-status {
   font-size: 13px;
-  color: #e5e7eb;
+  color: var(--text);
 }
 
 .leak-status.bad {
-  color: #fb7185;
+  color: #c44557;
 }
 
 .leak-status.ok {
-  color: #4ade80;
+  color: #2f8d4b;
 }
 
 .result-section h3 {
@@ -195,7 +304,7 @@ body {
 .tips {
   margin: 0;
   padding-left: 18px;
-  color: #d1d5db;
+  color: #34546f;
 }
 
 .details li,
@@ -204,18 +313,18 @@ body {
 }
 
 .details li span.key {
-  color: #9ca3af;
+  color: var(--text-muted);
 }
 
 .details li span.ok {
-  color: #4ade80;
+  color: #2f8d4b;
 }
 
 .details li span.warn {
-  color: #facc15;
+  color: #a67712;
 }
 
 .details li span.bad {
-  color: #fb7185;
+  color: #c44557;
 }
 
