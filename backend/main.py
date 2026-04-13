@@ -4,8 +4,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import PlainTextResponse
 
 from backend.db_depends import get_db
-from backend.database import engine, Base
-from backend.models import passwords  # noqa: F401
 from backend.schemas.response import ResponseSchema, RequestSchema
 from backend.utils.check_strength import check_strength
 
@@ -27,12 +25,6 @@ app.add_middleware(
 )
 
 tags = ['check_password']
-
-
-@app.on_event("startup")
-async def on_startup() -> None:
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
 
 
 @app.get('/', tags=['root'])

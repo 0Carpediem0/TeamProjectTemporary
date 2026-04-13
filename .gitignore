@@ -19,20 +19,12 @@ dist/
 *.egg-info/
 *.egg
 
-# Alembic (миграции коммитим, но игнорируем лишнее)
-# Важно: папку alembic/versions НЕ игнорируем, там код миграций!
-alembic.ini
 # Если используешь sqlite локально
-*.db
-*.sqlite
-*.sqlite3
 
 # Переменные окружения (секреты, ключи, доступы к БД)
-data/
 .env
 .env.local
 .env.*.local
-backend/migrations/env.py
 
 # Логирование
 *.log
