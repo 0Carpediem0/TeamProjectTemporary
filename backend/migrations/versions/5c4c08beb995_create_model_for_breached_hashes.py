@@ -1,8 +1,8 @@
 """create model for breached hashes
 
-Revision ID: afd438346b47
+Revision ID: 5c4c08beb995
 Revises: 
-Create Date: 2026-04-13 20:54:14.991331
+Create Date: 2026-04-13 21:31:53.785820
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'afd438346b47'
+revision: str = '5c4c08beb995'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
