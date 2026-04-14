@@ -11,7 +11,7 @@ const scoreBadge = document.getElementById("scoreBadge");
 const leakStatus = document.getElementById("leakStatus");
 const detailsList = document.getElementById("detailsList");
 const tipsList = document.getElementById("tipsList");
-const API_URL = "http://localhost:8000/api/check";
+const API_URL = "/api/check";
 const THEME_STORAGE_KEY = "password-checker-theme";
 
 initTheme();

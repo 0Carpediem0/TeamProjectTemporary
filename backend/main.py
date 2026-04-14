@@ -1,7 +1,10 @@
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import PlainTextResponse
+from pathlib import Path
 
 from backend.db_depends import get_db
 from backend.schemas.response import ResponseSchema, RequestSchema
@@ -11,9 +14,15 @@ app = FastAPI(
     title='Сервис проверки стойкости паролей и их присутствия в базах утечек'
 )
 
+# Подключаем директорию frontend как статическую
+frontend_dir = Path(__file__).parent.parent / "frontend"
+app.mount("/static", StaticFiles(directory=str(frontend_dir)), name="static")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
+        "http://127.0.0.1:8000",
+        "http://localhost:8000",
         "http://127.0.0.1:5500",
         "http://localhost:5500",
         "http://127.0.0.1:5501",
@@ -29,9 +38,7 @@ tags = ['check_password']
 
 @app.get('/', tags=['root'])
 async def root():
-    return PlainTextResponse(
-        'Сервис проверки стойкости паролей и их присутствия в базах утечек'
-    )
+    return FileResponse(frontend_dir / "index.html")
 
 
 @app.post('/api/check', tags=tags, response_model=ResponseSchema)
