@@ -4,18 +4,28 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Проверка стойкости пароля</title>
+    <link rel="icon" type="image/png" href="/static/images/logo-removebg.png" />
     <link rel="stylesheet" href="/static/styles.css" />
   </head>
   <body>
     <div class="page">
       <header class="header">
         <div class="header-top">
-          <h1>Проверка стойкости пароля</h1>
+          <div class="brand">
+            <img
+              src="/static/images/logo-removebg.png"
+              alt="Логотип сервиса"
+              class="brand-logo"
+              width="28"
+              height="28"
+            />
+            <h1>Проверка стойкости пароля</h1>
+          </div>
           <button type="button" class="theme-toggle" id="themeToggle">
             Тёмная тема
           </button>
         </div>
-        <p>
+        <p class="header-description">
           Узнайте, насколько ваш пароль надёжен и встречался ли он в базах
           утечек.
         </p>
@@ -78,7 +88,6 @@
       </main>
     </div>
 
-    <script src="./script.js"></script>
     <script src="/static/script.js"></script>
   </body>
   </html>

@@ -47,8 +47,26 @@ body {
   flex-direction: column;
 }
 
+.brand {
+  display: inline-flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+}
+
+.brand-logo {
+  display: block;
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  flex: 0 0 auto;
+  filter: drop-shadow(0 4px 10px rgba(45, 140, 255, 0.14));
+}
+
 .header h1 {
-  margin: 0 0 8px;
+  margin: 0;
   font-size: 28px;
   color: var(--title);
 }
@@ -60,7 +78,7 @@ body {
   gap: 12px;
 }
 
-.header p {
+.header-description {
   margin: 0;
   color: var(--text-muted);
 }
@@ -77,6 +95,16 @@ body {
 @media (max-width: 800px) {
   .layout {
     flex-direction: column;
+  }
+
+  .header-top {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .brand-logo {
+    width: 28px;
+    height: 28px;
   }
 }
 
