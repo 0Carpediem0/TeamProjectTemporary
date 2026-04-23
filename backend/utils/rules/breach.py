@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from backend.models.passwords import BreachedHash
-from .hash import hash_password
+from backend.utils.hash import hash_password
 
 
 async def check_breached_password(db: AsyncSession, password: str) -> bool:

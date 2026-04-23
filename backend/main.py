@@ -29,8 +29,8 @@ app.add_middleware(
         "http://localhost:5501",
     ],
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["POST"],
+    allow_headers=["Content-Type"],
 )
 
 tags = ['check_password']
@@ -46,7 +46,6 @@ async def check_password(request: RequestSchema, db: AsyncSession = Depends(get_
     """
     Принимает пароль из тела post-запроса и возвращает
     результат проверки пароля: оценка стойкости (Слабый / Средний / Сильный),
-    список причин (короткий / только буквы / есть последовательность 123 / популярное слово)
+    список причин (короткий / только буквы / есть последовательность 123)
     """
-    result = await check_strength(db, request.password)
-    return result
+    return await check_strength(db, request.password)
