@@ -1,103 +1,77 @@
-import re
+"""
+Главная функция проверки стойкости пароля.
+Оркестрирует вызовы отдельных правил, обрабатывает автоматически слабые случаи,
+подсчитывает итоговый балл и формирует ответ.
+"""
 
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from backend.utils.check_breached_password import check_breached_password
+from .config import WEAK_THRESHOLD, MEDIUM_THRESHOLD
+from .rules.breach import is_password_breached
+from .rules.length import evaluate_length
+from .rules.composition import evaluate_composition
+from .rules.forbidden import evaluate_forbidden_patterns
 
 
 async def check_strength(db: AsyncSession, password: str) -> dict[str, str | int | list[str]]:
-    scores: int = 0
-    reasons: list[str] = []
-    final_strength: str = 'weak'
-    breach_found = await check_breached_password(db, password)
+    """
+        Асинхронно оценивает стойкость пароля по заданным правилам.
 
-    if len(password) < 8:
-        reasons.append('Слишком короткий (менее 8 символов)')
+        Returns:
+            dict со структурой:
+            {
+                'strength': 'weak' | 'medium' | 'strong',
+                'scores': int,
+                'reasons': list[str]
+            }
+    """
+    stripped = password.strip()
+    total_score = 0
+    all_reasons = []
+
+    if not stripped:
         return {
-            'strength': final_strength,
-            'scores': scores,
-            'reasons': reasons
+            'strength': 'weak',
+            'scores': 0,
+            'reasons': ['Введите пароль']
         }
 
-    if breach_found:
-        reasons.append('Обнаружен в базе утечек')
+    if await is_password_breached(db, stripped):
         return {
-            'strength': final_strength,
-            'scores': scores,
-            'reasons': reasons
+            'strength': 'weak',
+            'scores': total_score,
+            'reasons': ['Обнаружен в базе утечек']
         }
 
-    if 8 <= len(password) <= 11:
-        scores += 1
+    length_score, length_reason = evaluate_length(stripped)
+    if length_score == 0:
+        return {
+            'strength': 'weak',
+            'scores': total_score,
+            'reasons': [length_reason]
+        }
+    total_score += length_score
+    if length_reason:
+        all_reasons.append(length_reason)
 
-    elif len(password) >= 12:
-        scores += 2
+    comp_score, comp_reasons = evaluate_composition(stripped)
+    total_score += comp_score
+    all_reasons.extend(comp_reasons)
 
-    has_digit = bool(re.search(r'\d', password))
-    has_upper = bool(re.search(r'[A-Z]', password))
-    has_special = bool(re.search(r'[!@#$%^]', password))
+    forb_score, forb_reasons = evaluate_forbidden_patterns(stripped)
+    total_score += forb_score
+    all_reasons.extend(forb_reasons)
 
-    if has_digit:
-        scores += 1
+    total_score = max(total_score, 0)
+
+    if total_score <= WEAK_THRESHOLD:
+        strength = 'weak'
+    elif total_score <= MEDIUM_THRESHOLD:
+        strength = 'medium'
     else:
-        scores = max(scores - 1, 0)
-        reasons.append('Не содержит цифр')
-
-    if has_upper:
-        scores += 1
-    else:
-        scores = max(scores - 1, 0)
-        reasons.append('Не содержит заглавных букв')
-
-    if has_special:
-        scores += 1
-    else:
-        scores = max(scores - 1, 0)
-        reasons.append('Не содержит специальных символов (!@#$%^)')
-
-    if password.isdigit():
-        scores = max(scores - 1, 0)
-        reasons.append('Содержит только цифры')
-    elif password.isalpha() and password.islower():
-        scores = max(scores - 1, 0)
-        reasons.append('Содержит только строчные буквы')
-
-    forbidden_count = 0
-
-    if re.search(r'123|1234|12345', password):
-        forbidden_count += 1
-        reasons.append('Содержит простую числовую последовательность (123, 1234 и т.д.)')
-
-    if re.search(r'qwerty|qwerty123|asdfgh|zxcvbn', password, re.IGNORECASE):
-        forbidden_count += 1
-        reasons.append('Содержит клавиатурную последовательность (qwerty)')
-
-    if re.search(r'password|admin', password, re.IGNORECASE):
-        forbidden_count += 1
-        reasons.append('Содержит популярный пароль (password, admin)')
-
-    if re.search(r'(.)\1{3,}', password):
-        forbidden_count += 1
-        reasons.append('Содержит повторяющиеся символы')
-
-    if re.search(r'\b(19|20)\d{2}\b', password):
-        forbidden_count += 1
-        reasons.append('Содержит год или дату')
-
-    if forbidden_count >= 2:
-        scores = max(scores - 2, 0)
-    elif forbidden_count == 1:
-        scores = max(scores - 1, 0)
-
-    if scores <= 1:
-        final_strength = 'weak'
-    elif scores <= 3:
-        final_strength = 'medium'
-    else:
-        final_strength = 'strong'
+        strength = 'strong'
 
     return {
-        'strength': final_strength,
-        'scores': scores,
-        'reasons': reasons
+        'strength': strength,
+        'scores': total_score,
+        'reasons': all_reasons
     }
