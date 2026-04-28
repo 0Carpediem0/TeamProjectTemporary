@@ -13,6 +13,7 @@ const detailsList = document.getElementById("detailsList");
 const tipsList = document.getElementById("tipsList");
 const API_URL = "/api/check";
 const THEME_STORAGE_KEY = "password-checker-theme";
+const systemThemeMedia = window.matchMedia("(prefers-color-scheme: dark)");
 
 initTheme();
 
@@ -179,6 +180,12 @@ function mapBackendResponse(payload) {
 }
 
 function initTheme() {
+  if (isMobileThemeMode()) {
+    setTheme(getSystemTheme(), false);
+    subscribeToSystemThemeChanges();
+    return;
+  }
+
   const savedTheme = localStorage.getItem(THEME_STORAGE_KEY) || "light";
   setTheme(savedTheme);
 }
@@ -189,13 +196,37 @@ function toggleTheme() {
   setTheme(next);
 }
 
-function setTheme(theme) {
+function getSystemTheme() {
+  return systemThemeMedia.matches ? "dark" : "light";
+}
+
+function isMobileThemeMode() {
+  return window.innerWidth <= 800;
+}
+
+function subscribeToSystemThemeChanges() {
+  if (systemThemeMedia.addEventListener) {
+    systemThemeMedia.addEventListener("change", applySystemThemeForMobile);
+  } else {
+    systemThemeMedia.addListener(applySystemThemeForMobile);
+  }
+}
+
+function applySystemThemeForMobile() {
+  if (!isMobileThemeMode()) return;
+  setTheme(getSystemTheme(), false);
+}
+
+function setTheme(theme, persist = true) {
   const normalized = theme === "dark" ? "dark" : "light";
   document.documentElement.setAttribute("data-theme", normalized);
-  localStorage.setItem(THEME_STORAGE_KEY, normalized);
+
+  if (persist) {
+    localStorage.setItem(THEME_STORAGE_KEY, normalized);
+  }
+
   if (themeToggleBtn) {
     themeToggleBtn.textContent =
       normalized === "dark" ? "Светлая тема" : "Тёмная тема";
   }
 }
-
