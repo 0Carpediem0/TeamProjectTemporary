@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Проверка стойкости пароля</title>
+    <link rel="icon" type="image/png" href="/static/images/logo-removebg.png" />
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <div class="page">
+      <header class="header">
+        <div class="header-top">
+          <div class="brand">
+            <img
+              src="/static/images/logo-removebg.png"
+              alt="Логотип сервиса"
+              class="brand-logo"
+              width="28"
+              height="28"
+            />
+            <h1>Проверка стойкости пароля</h1>
+          </div>
+          <button type="button" class="theme-toggle" id="themeToggle">
+            Тёмная тема
+          </button>
+        </div>
+        <p class="header-description">
+          Узнайте, насколько ваш пароль надёжен и встречался ли он в базах
+          утечек.
+        </p>
+      </header>
+
+      <main class="layout">
+        <section class="card form-card">
+
+          <label for="password" class="field-label">Введите пароль</label>
+          <div class="password-row">
+            <input
+              id="password"
+              type="password"
+              autocomplete="off"
+              class="password-input"
+            />
+            <button type="button" class="btn btn-ghost" id="togglePassword">
+              Показать
+            </button>
+          </div>
+          <p class="hint">
+            Пароль обрабатывается только в этом окне. Мы не сохраняем введённые
+            данные.
+          </p>
+
+          <button class="btn btn-primary" id="checkBtn" disabled>
+            Проверить пароль
+          </button>
+        </section>
+
+        <section class="card result-card" id="resultCard" aria-hidden="true">
+          <button type="button" class="popup-close" id="closeResultPopup" aria-label="Закрыть">
+            ×
+          </button>
+          <h2 class="card-title">Результат проверки</h2>
+
+          <div id="resultPlaceholder" class="placeholder">
+            Введите пароль и нажмите «Проверить», чтобы увидеть результат.
+          </div>
+
+          <div id="resultContent" class="result" hidden>
+            <div class="result-row">
+              <div class="score-badge" id="scoreBadge">Слабый пароль</div>
+              <div class="leak-status" id="leakStatus">
+                Данных об утечках пока нет
+              </div>
+            </div>
+
+            <div class="result-section">
+              <h3>Детальная оценка</h3>
+              <ul class="details" id="detailsList"></ul>
+            </div>
+
+            <div class="result-section">
+              <h3>Рекомендации</h3>
+              <ul class="tips" id="tipsList"></ul>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer class="footer card">
+        <h2 class="footer-title">Контакты</h2>
+        <div class="footer-grid">
+          <p class="footer-item"><span class="footer-label">Телефон:</span> <span>+7 912 268 8746</span></p>
+          <p class="footer-item"><span class="footer-label">Email:</span> <span>yegor.starkov.06@mail.ru</span></p>
+          <p class="footer-item"><span class="footer-label">Telegram:</span> <span>@Crpdiemi</span></p>
+          <p class="footer-item"><span class="footer-label">Город:</span> <span>Екатеринбург</span></p>
+          <p class="footer-item"><span class="footer-label">Университет</span> <span>УрФУ</span></p>
+        </div>
+      </footer>
+    </div>
+
+    <script src="/static/script.js"></script>
+  </body>
+  </html>
+
