@@ -1,38 +1,86 @@
-test_data = [
-    # Основные тесты
-    ("1234567", "СЛАБЫЙ"),
-    ("Pass1234!", "СРЕДНИЙ"),
-    ("StrongP@ss2025", "СИЛЬНЫЙ"),
-    ("12345678", "СЛАБЫЙ"),
-    ("password", "СЛАБЫЙ"),
-    ("password123", "СЛАБЫЙ"),
-    ("qwerty123", "СЛАБЫЙ"),
-    ("", "ОШИБКА"),
+import requests
+
+API_URL = "http://127.0.0.1:8000/api/check"
+
+tests = [
+    ("1234567", "weak", True),
+    ("12345678", "weak", True),
+    ("password", "weak", True),
+    ("qwerty123", "weak", True),
+    ("letmein", "weak", True),
+    ("monkey", "weak", True),
+    ("admin", "weak", True),
+    ("welcome", "weak", True),
+    ("password1!", "weak", True),
     
-    #Граничные случаи
-    ("A1b2C3d", "СЛАБЫЙ"),      # 7 символов
-    ("A1b2C3d!", "СРЕДНИЙ"),    # 8 символов
-    ("A1b2C3d!E5", "СРЕДНИЙ"),  # 11 символов
-    ("A1b2C3d!E5r", "СИЛЬНЫЙ"), # 12 символов
+    # === Пароли от Тиграна ===
+    ("qwerty123", "weak", True),
+    ("admin123", "weak", True),
+    ("qwertyuiop", "weak", True),
+    ("123456789", "weak", True),
+    ("abc123", "weak", True),
+    ("password1", "weak", True),
+    ("654321", "weak", True),
     
-    ("Password1", "СРЕДНИЙ"),    # нет спецсимволов
-    ("password1!", "СРЕДНИЙ"),   # нет заглавных
-    
-    ("Password2024", "СЛАБЫЙ"),  # год
-    ("aaaaa123", "СЛАБЫЙ"),      # повторы
+    # === ТОЧНО НЕ В БАЗЕ (False) ===
+    ("Pass1234!", "medium", False),
+    ("StrongP@ss2025", "strong", False),
+    ("password123", "weak", False),
+    ("A1b2C3d", "weak", False),
+    ("A1b2C3d!", "strong", False),
+    ("A1b2C3d!E5", "strong", False),
+    ("A1b2C3d!E5r", "strong", False),
+    ("Password1", "medium", False),
+    ("Password2024", "medium", False),
+    ("aaaaa123", "weak", False),
+    ("login", "weak", False),
+    ("NeverLeakedPass999", "medium", False),
+    ("MyUniqueP@ssw0rd", "strong", False),
+    ("SuperSecureDog2025", "medium", False),
 ]
 
 def run_auto_tests():
-    """Запускает тесты (выводит список)"""
-    print("АВТОМАТИЗИРОВАННЫЕ ТЕСТЫ")
-    print("-" * 60)
-    print()
+    print("АВТОМАТИЗИРОВАННЫЕ ТЕСТЫ ")
+    print("=" * 65)
     
-    for password, expected in test_data:
-        display = "[пусто]" if password == "" else password
-        print(f"Пароль: '{display}' -> ожидается: {expected}")
-    print()
-    print(f"Всего тестов: {len(test_data)}")
-    print("=" * 60)
+    passed = 0
+    failed = 0
 
-run_auto_tests()
+    for password, expected_strength, expected_leak in tests:
+        display = "[пусто]" if password == "" else password
+        
+        try:
+            response = requests.post(API_URL, json={"password": password})
+            
+            if response.status_code != 200:
+                print(f"❌ {display} -> Ошибка: статус {response.status_code}")
+                failed += 1
+                continue
+            
+            data = response.json()
+            actual_strength = data.get("strength")
+            reasons = " ".join(data.get("reasons", []))
+            has_leak = "утечек" in reasons
+            
+            strength_ok = (actual_strength == expected_strength)
+            leak_ok = (has_leak == expected_leak)
+            
+            if strength_ok and leak_ok:
+                print(f"✅ {display} -> {actual_strength} | Утечка: {has_leak}")
+                passed += 1
+            else:
+                print(f"❌ {display} -> Ожид.: {expected_strength}, утечка={expected_leak} | Факт.: {actual_strength}, утечка={has_leak}")
+                failed += 1
+                
+        except Exception as e:
+            print(f"❌ {display} -> Ошибка соединения: {e}")
+            failed += 1
+
+    print("=" * 65)
+    print(f"✅ Пройдено: {passed}")
+    print(f"❌ Не пройдено: {failed}")
+    print(f"📊 Всего тестов: {len(tests)}")
+    print("=" * 65)
+
+if __name__ == "__main__":
+    run_auto_tests()
