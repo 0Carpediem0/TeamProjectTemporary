@@ -37,6 +37,9 @@ tests = [
     ("NeverLeakedPass999", "medium", False),
     ("MyUniqueP@ssw0rd", "strong", False),
     ("SuperSecureDog2025", "medium", False),
+     # === ТЕСТЫ ПО ЗАДАНИЮ (из базы / не из базы) ===
+    ("qwerty123", "weak", True),        # есть в базе
+    ("StrongP@ss2025", "strong", False), # нет в базе
 ]
 
 def run_auto_tests():
