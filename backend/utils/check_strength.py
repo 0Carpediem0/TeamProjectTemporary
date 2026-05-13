@@ -28,6 +28,7 @@ async def check_strength(db: AsyncSession, password: str) -> dict[str, str | int
     total_score = 0
     all_reasons = []
 
+    # Проверка на пустой пароль.
     if not stripped:
         return {
             'strength': 'weak',
@@ -35,6 +36,7 @@ async def check_strength(db: AsyncSession, password: str) -> dict[str, str | int
             'reasons': ['Введите пароль']
         }
 
+    # Проверка наличия пароля в утечках.
     if await is_password_breached(db, stripped):
         return {
             'strength': 'weak',
@@ -42,6 +44,7 @@ async def check_strength(db: AsyncSession, password: str) -> dict[str, str | int
             'reasons': ['Обнаружен в базе утечек']
         }
 
+    # Оценка длины пароля.
     length_score, length_reason = evaluate_length(stripped)
     if length_score == 0:
         return {
@@ -50,26 +53,29 @@ async def check_strength(db: AsyncSession, password: str) -> dict[str, str | int
             'reasons': [length_reason]
         }
     total_score += length_score
-    if length_reason:
+    if length_reason: # Проверка наличия пояснения.
         all_reasons.append(length_reason)
 
+    # Оценка разнообразия символов.
     comp_score, comp_reasons = evaluate_composition(stripped)
     total_score += comp_score
     all_reasons.extend(comp_reasons)
 
+    # Проверка запрещённых паттернов.
     forb_score, forb_reasons = evaluate_forbidden_patterns(stripped)
     total_score += forb_score
     all_reasons.extend(forb_reasons)
 
     total_score = max(total_score, 0)
 
-    if total_score <= WEAK_THRESHOLD:
+    if total_score <= WEAK_THRESHOLD: # Проверка на слабый уровень.
         strength = 'weak'
-    elif total_score <= MEDIUM_THRESHOLD:
+    elif total_score <= MEDIUM_THRESHOLD: # Проверка на средний уровень.
         strength = 'medium'
     else:
-        strength = 'strong'
+        strength = 'strong' # Присвоение высокого уровня стойкости.
 
+    # Возврат итогового ответа.
     return {
         'strength': strength,
         'scores': total_score,

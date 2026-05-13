@@ -3,13 +3,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
-from starlette.responses import PlainTextResponse
 from pathlib import Path
 
 from backend.db_depends import get_db
 from backend.schemas.response import ResponseSchema, RequestSchema
 from backend.utils.check_strength import check_strength
 
+# Создание экземпляра FastAPI-приложения.
 app = FastAPI(
     title='Сервис проверки стойкости паролей и их присутствия в базах утечек'
 )
@@ -18,6 +18,7 @@ app = FastAPI(
 frontend_dir = Path(__file__).parent.parent / "frontend"
 app.mount("/static", StaticFiles(directory=str(frontend_dir)), name="static")
 
+# Добавление middleware для обработки CORS-запросов.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -33,14 +34,17 @@ app.add_middleware(
     allow_headers=["Content-Type"],
 )
 
-tags = ['check_password']
-
+tags = ['check_password'] # Создание тега для группировки эндпоинтов в документации.
 
 @app.get('/', tags=['root'])
 async def root():
+    '''
+    GET-эндпоинт для корневого маршрута.
+    '''
+    
     return FileResponse(frontend_dir / "index.html")
 
-
+ # Регистрация POST-эндпоинта для проверки пароля.
 @app.post('/api/check', tags=tags, response_model=ResponseSchema)
 async def check_password(request: RequestSchema, db: AsyncSession = Depends(get_db)):
     """
@@ -48,4 +52,4 @@ async def check_password(request: RequestSchema, db: AsyncSession = Depends(get_
     результат проверки пароля: оценка стойкости (Слабый / Средний / Сильный),
     список причин (короткий / только буквы / есть последовательность 123)
     """
-    return await check_strength(db, request.password)
+    return await check_strength(db, request.password) # Запуск проверки пароля и возврат результата клиенту.
