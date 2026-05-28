@@ -5,24 +5,27 @@
 """
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from .config import WEAK_THRESHOLD, MEDIUM_THRESHOLD
+
+from .config import MEDIUM_THRESHOLD, WEAK_THRESHOLD
 from .rules.breach import is_password_breached
-from .rules.length import evaluate_length
 from .rules.composition import evaluate_composition
 from .rules.forbidden import evaluate_forbidden_patterns
+from .rules.length import evaluate_length
 
 
-async def check_strength(db: AsyncSession, password: str) -> dict[str, str | int | list[str]]:
+async def check_strength(
+    db: AsyncSession, password: str
+) -> dict[str, str | int | list[str]]:
     """
-        Асинхронно оценивает стойкость пароля по заданным правилам.
+    Асинхронно оценивает стойкость пароля по заданным правилам.
 
-        Returns:
-            dict со структурой:
-            {
-                'strength': 'weak' | 'medium' | 'strong',
-                'scores': int,
-                'reasons': list[str]
-            }
+    Returns:
+        dict со структурой:
+        {
+            'strength': 'weak' | 'medium' | 'strong',
+            'scores': int,
+            'reasons': list[str]
+        }
     """
     stripped = password.strip()
     total_score = 0
@@ -31,29 +34,25 @@ async def check_strength(db: AsyncSession, password: str) -> dict[str, str | int
     # Проверка на пустой пароль.
     if not stripped:
         return {
-            'strength': 'weak',
-            'scores': 0,
-            'reasons': ['Введите пароль']
+            "strength": "weak",
+            "scores": 0,
+            "reasons": ["Пароль не может состоять только из пробелов"],
         }
 
     # Проверка наличия пароля в утечках.
     if await is_password_breached(db, stripped):
         return {
-            'strength': 'weak',
-            'scores': total_score,
-            'reasons': ['Обнаружен в базе утечек']
+            "strength": "weak",
+            "scores": total_score,
+            "reasons": ["Обнаружен в базе утечек"],
         }
 
     # Оценка длины пароля.
     length_score, length_reason = evaluate_length(stripped)
     if length_score == 0:
-        return {
-            'strength': 'weak',
-            'scores': total_score,
-            'reasons': [length_reason]
-        }
+        return {"strength": "weak", "scores": total_score, "reasons": [length_reason]}
     total_score += length_score
-    if length_reason: # Проверка наличия пояснения.
+    if length_reason:  # Проверка наличия пояснения.
         all_reasons.append(length_reason)
 
     # Оценка разнообразия символов.
@@ -68,16 +67,12 @@ async def check_strength(db: AsyncSession, password: str) -> dict[str, str | int
 
     total_score = max(total_score, 0)
 
-    if total_score <= WEAK_THRESHOLD: # Проверка на слабый уровень.
-        strength = 'weak'
-    elif total_score <= MEDIUM_THRESHOLD: # Проверка на средний уровень.
-        strength = 'medium'
+    if total_score <= WEAK_THRESHOLD:  # Проверка на слабый уровень.
+        strength = "weak"
+    elif total_score <= MEDIUM_THRESHOLD:  # Проверка на средний уровень.
+        strength = "medium"
     else:
-        strength = 'strong' # Присвоение высокого уровня стойкости.
+        strength = "strong"  # Присвоение высокого уровня стойкости.
 
     # Возврат итогового ответа.
-    return {
-        'strength': strength,
-        'scores': total_score,
-        'reasons': all_reasons
-    }
+    return {"strength": strength, "scores": total_score, "reasons": all_reasons}
