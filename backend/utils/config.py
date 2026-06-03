@@ -7,7 +7,7 @@ import re
 
 # ----- Пороги длины и баллы ------------------------------------------------
 MIN_LENGTH = 8
-MAX_LENGTH = 256
+MAX_LENGTH = 128
 LENGTH_SCORE_8_11 = 1
 LENGTH_SCORE_12_PLUS = 2
 
