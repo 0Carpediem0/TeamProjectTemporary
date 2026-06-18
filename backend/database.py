@@ -6,6 +6,10 @@ from sqlalchemy.orm import DeclarativeBase
 
 # Определение строки подключения к SQLite-базе данных.
 DATABASE_URL = "sqlite+aiosqlite:///./backend/data/breached_hashes.db"
+# engine = create_async_engine(DATABASE_URL, echo=True)
+# async_session = async_sessionmaker(
+# bind=engine, expire_on_commit=True, class_=AsyncSession
+# )
 
 
 @asynccontextmanager

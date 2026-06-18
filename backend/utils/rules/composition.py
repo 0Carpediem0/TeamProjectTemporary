@@ -4,9 +4,15 @@
 """
 
 import re
+
 from ..config import (
-    BONUS_HAS_DIGIT, BONUS_HAS_UPPER, BONUS_HAS_SPECIAL,
-    PENALTY_ONLY_DIGITS, PENALTY_ONLY_LETTERS, PENALTY_ONLY_LOWERCASE,
+    BONUS_HAS_DIGIT,
+    BONUS_HAS_LOWER,
+    BONUS_HAS_SPECIAL,
+    BONUS_HAS_UPPER,
+    PENALTY_ONLY_DIGITS,
+    PENALTY_ONLY_LETTERS,
+    PENALTY_ONLY_LOWERCASE,
 )
 
 
@@ -17,27 +23,35 @@ def evaluate_composition(password: str) -> tuple[int, list[str]]:
     score = 0
     reasons = []
 
-    has_digit = bool(re.search(r'\d', password))
-    has_upper = bool(re.search(r'[A-Z]', password))
-    has_special = bool(re.search(r'[!@#$%^_]', password))
+    has_digit = bool(re.search(r"\d", password))
+    has_upper = bool(re.search(r"[A-Z]", password))
+    has_lower = bool(re.search(r"[a-z]", password))
+    has_special = bool(re.search(r"[!@#$%^_]", password))
 
     if has_digit:
         score += BONUS_HAS_DIGIT
     else:
         score += PENALTY_ONLY_LETTERS
-        reasons.append('Добавьте хотя бы одну цифру')
+        reasons.append("Добавьте хотя бы одну цифру")
+
     if has_upper:
         score += BONUS_HAS_UPPER
     else:
         score += PENALTY_ONLY_LOWERCASE
-        reasons.append('Используйте заглавные буквы')
+        reasons.append("Используйте заглавные буквы")
+
+    if has_lower:
+        score += BONUS_HAS_LOWER
+    else:
+        reasons.append("Добавьте строчные буквы")
+
     if has_special:
         score += BONUS_HAS_SPECIAL
     else:
-        reasons.append('Добавьте специальные символы (! @ # $ % ^)')
+        reasons.append("Добавьте специальные символы (! @ # $ % ^)")
 
     if password.isdigit():
         score += PENALTY_ONLY_DIGITS
-        reasons.append('Добавьте буквы (заглавные и строчные) и специальные символы')
+        reasons.append("Добавьте буквы (заглавные и строчные) и специальные символы")
 
     return score, reasons
